@@ -268,7 +268,8 @@ TrabajoComisiones/
 ├── docs/
 │   ├── README.md              # este documento
 │   ├── base-de-datos.md       # ampliación del modelo de datos (opcional)
-│   └── rutas.md               # detalle de endpoints y pantallas (opcional)
+│   ├── rutas.md               # detalle de endpoints y pantallas (opcional)
+│   └── restricciones.md       # reglas y restricciones (opcional)
 ├── database/
 │   └── init/
 │       ├── 001-schema.sql     # tablas, índices y restricciones
@@ -760,11 +761,15 @@ TrabajoComisiones/
 │       ├── 001-schema.sql
 │       └── 002-seed.sql
 ├── docs/
-│   └── README.md
+│   ├── README.md
+│   ├── base-de-datos.md
+│   ├── rutas.md
+│   └── restricciones.md
 ├── node/
 │   ├── .dockerignore
 │   ├── Dockerfile
 │   ├── package.json
+│   ├── package-lock.json
 │   └── src/
 │       ├── app.js
 │       ├── server.js
@@ -1047,8 +1052,49 @@ Es este documento. Contiene:
 10. Las buenas prácticas de seguridad.
 11. El estado actual y las tareas pendientes.
 12. Esta guía exhaustiva de archivos.
+13. La explicación del ORM con Prisma.
 
 Es la documentación principal que se debe leer antes de tocar el código.
+
+#### `docs/base-de-datos.md`
+
+Documento de ampliación del modelo de datos. Contiene:
+
+- El estado actual de PostgreSQL y de los scripts de inicialización.
+- El modelo relacional representado de forma visual.
+- El diccionario de datos de las siete tablas, columna por columna.
+- Las relaciones, cardinalidades y reglas de borrado.
+- Los índices y su utilidad.
+- Los datos iniciales previstos.
+- El ciclo de vida de la base de datos y cómo reinicializarla.
+- El enlace a `docs/restricciones.md` y las tareas pendientes.
+
+#### `docs/rutas.md`
+
+Documento de endpoints y pantallas. Contiene:
+
+- El principio de renderizado en el servidor aplicado a las rutas.
+- La tabla de rutas de Node.js con método, controlador, vista y estado.
+- La tabla de rutas de PHP y las rutas pendientes.
+- La descripción de cada pantalla: inicio, listado, detalle, formulario,
+  404 y error.
+- Los parciales que componen cada interfaz.
+- El mapa de navegación.
+- El flujo de los formularios con POST / Redirect / GET.
+- Ejemplos de peticiones HTTP y el estado actual de implementación.
+
+#### `docs/restricciones.md`
+
+Documento de reglas y límites. Contiene:
+
+- Claves primarias, columnas obligatorias y columnas opcionales.
+- Restricciones de unicidad y comprobaciones `CHECK`.
+- Claves foráneas, integridad referencial y comportamiento al borrar.
+- Índices.
+- Reglas de validación que debe aplicar la aplicación.
+- Restricciones de seguridad.
+- Restricciones operativas de Docker.
+- Restricciones del flujo de pantallas sin JavaScript.
 
 ### 12.3 Carpeta `database/`
 
