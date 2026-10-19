@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  php:
+    build: ./php
+    ports:
+      - "${PHP_PORT:-8000}:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-comisiones}
+      DB_USER: ${POSTGRES_USER:-comisiones}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-comisiones_dev}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-comisiones}
+      POSTGRES_USER: ${POSTGRES_USER:-comisiones}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-comisiones_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
