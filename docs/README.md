@@ -51,12 +51,10 @@ El servicio PHP incluye la extensión PDO PostgreSQL y recibe la configuración
 de conexión mediante las variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`
 y `DB_PASSWORD`. Dentro de Docker, el host de la base de datos es `db`.
 
-## Estructura inicial
+## Estructura del proyecto
 
-- `server.js`: servidor HTTP mínimo y endpoint de salud.
+- `node/`: servidor Node.js, página HTML, `package.json` e imagen Docker.
 - `php/`: aplicación PHP servida por Apache y su imagen Docker.
-- `index.html`: página servida por la aplicación.
-- `Dockerfile`: imagen de Node.js.
 - `docker-compose.yml`: servicios de Node.js, PHP y PostgreSQL.
 - `database/init/`: scripts de inicialización de la base de datos.
 - `docs/README.md`: documentación del proyecto.

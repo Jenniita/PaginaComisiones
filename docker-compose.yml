@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    build: ./node
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
