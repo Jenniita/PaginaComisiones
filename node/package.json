@@ -2,8 +2,14 @@
   "name": "trabajo-comisiones",
   "version": "1.0.0",
   "private": true,
-  "description": "Aplicación inicial con Node.js y PostgreSQL",
+  "description": "Página de comisiones de dibujos con Node.js, EJS y PostgreSQL",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
   }
 }

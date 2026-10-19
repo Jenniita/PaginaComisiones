@@ -1,10 +1,15 @@
 services:
-  app:
+  node:
     build: ./node
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
       PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-comisiones}
+      DB_USER: ${POSTGRES_USER:-comisiones}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-comisiones_dev}
     depends_on:
       db:
         condition: service_healthy
@@ -26,7 +31,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:latest
+    image: postgres:16
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-comisiones}
       POSTGRES_USER: ${POSTGRES_USER:-comisiones}
@@ -34,7 +39,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
