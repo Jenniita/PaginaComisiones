@@ -238,32 +238,153 @@ El detalle completo de pantallas está en [`rutas.md`](rutas.md).
 
 Base de datos `comisiones`, creada con los scripts de `database/init/`.
 
-| Tabla | Contenido |
-| ----- | --------- |
-| `estados_comision` | Estados: pendiente, en_proceso, entregada, cancelada |
+### Diagrama entidad-relación
+
+```text
+estados_comision          tipos_comision
+  PK id (SMALLINT)          PK id (BIGINT)
+     nombre                    nombre
+                               descripcion
+                               precio_base
+                               activo
+       |1                        |1
+       |N                        |N
+usuarios ─────────────────── comisiones ──────────────── artistas
+  PK id (BIGINT)              PK id (BIGINT)              PK id (BIGINT)
+     nombre                FK cliente_id → usuarios          usuario_id (UNIQUE)
+     email (UNIQUE)         FK artista_id → artistas          nombre_artistico
+     password_hash          FK tipo_id    → tipos_comision    biografia
+     rol                    FK estado_id  → estados_comision  portafolio_url
+     creado_en                 titulo                         disponible
+                               descripcion                    creado_en
+                               referencias
+                               precio_acordado
+                               fecha_entrega
+                               creado_en
+                               actualizado_en
+                                  |1            |1
+                                  |N            |N
+                         archivos_comision      pagos
+                           PK id (BIGINT)        PK id (BIGINT)
+                         FK comision_id           comision_id
+                              url                 monto
+                              tipo                metodo
+                              creado_en           estado
+                                                  creado_en
+```
+
+### Tablas
+
+| Tabla | Descripción |
+| ----- | ----------- |
+| `estados_comision` | Catálogo de estados: `pendiente`, `en_proceso`, `entregada`, `cancelada` |
 | `usuarios` | Clientes, artistas y administradores |
-| `artistas` | Perfil artístico, uno por usuario artista |
-| `tipos_comision` | Catálogo de tipos de encargo |
-| `comisiones` | Encargos: cliente, artista, tipo, estado y precio |
-| `archivos_comision` | Referencias y entregas |
-| `pagos` | Pagos asociados a una comisión |
+| `artistas` | Perfil artístico extendido, uno por usuario con `rol = 'artista'` |
+| `tipos_comision` | Catálogo de tipos de encargo (retrato, chibi, ilustración…) |
+| `comisiones` | Tabla central: une cliente, artista, tipo, estado y precio |
+| `archivos_comision` | URLs de referencias y entregas ligadas a una comisión |
+| `pagos` | Pagos registrados para una comisión |
 
-Relaciones principales:
+### Diccionario de columnas
 
-- `usuarios` 1:1 `artistas`.
-- `usuarios` 1:N `comisiones` como cliente.
-- `artistas` 1:N `comisiones`.
-- `comisiones` N:1 `tipos_comision` y `estados_comision`.
-- `comisiones` 1:N `archivos_comision` y `pagos`.
+#### `estados_comision`
 
-Restricciones destacadas:
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `SMALLINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `nombre` | `VARCHAR(30)` | `NOT NULL`, `UNIQUE` |
 
-- Claves primarias autogeneradas.
-- `email`, `nombre` de estado y tipo, y `usuario_id` de artista son únicos.
-- `rol`, precios, tipos de archivo y estados de pago tienen `CHECK`.
-- Las claves foráneas protegen la integridad referencial.
-- Borrar una comisión borra sus archivos y pagos.
-- No se puede borrar un cliente, artista, tipo o estado en uso.
+#### `usuarios`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `nombre` | `VARCHAR(120)` | `NOT NULL` |
+| `email` | `VARCHAR(180)` | `NOT NULL`, `UNIQUE` |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL` |
+| `rol` | `VARCHAR(20)` | `NOT NULL`, `DEFAULT 'cliente'`, `CHECK IN ('cliente','artista','admin')` |
+| `creado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+
+#### `artistas`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `usuario_id` | `BIGINT` | `NOT NULL`, `UNIQUE`, FK → `usuarios(id)` `ON DELETE CASCADE` |
+| `nombre_artistico` | `VARCHAR(120)` | `NOT NULL` |
+| `biografia` | `TEXT` | Opcional |
+| `portafolio_url` | `VARCHAR(500)` | Opcional |
+| `disponible` | `BOOLEAN` | `NOT NULL`, `DEFAULT TRUE` |
+| `creado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+
+#### `tipos_comision`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `nombre` | `VARCHAR(100)` | `NOT NULL`, `UNIQUE` |
+| `descripcion` | `TEXT` | Opcional |
+| `precio_base` | `NUMERIC(10,2)` | `NOT NULL`, `DEFAULT 0`, `CHECK >= 0` |
+| `activo` | `BOOLEAN` | `NOT NULL`, `DEFAULT TRUE` |
+
+#### `comisiones`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `cliente_id` | `BIGINT` | `NOT NULL`, FK → `usuarios(id)` |
+| `artista_id` | `BIGINT` | `NOT NULL`, FK → `artistas(id)` |
+| `tipo_id` | `BIGINT` | `NOT NULL`, FK → `tipos_comision(id)` |
+| `estado_id` | `SMALLINT` | `NOT NULL`, FK → `estados_comision(id)` |
+| `titulo` | `VARCHAR(160)` | `NOT NULL` |
+| `descripcion` | `TEXT` | `NOT NULL` |
+| `referencias` | `TEXT` | Opcional |
+| `precio_acordado` | `NUMERIC(10,2)` | `NOT NULL`, `CHECK >= 0` |
+| `fecha_entrega` | `DATE` | Opcional |
+| `creado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+| `actualizado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+
+#### `archivos_comision`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `comision_id` | `BIGINT` | `NOT NULL`, FK → `comisiones(id)` `ON DELETE CASCADE` |
+| `url` | `VARCHAR(500)` | `NOT NULL` |
+| `tipo` | `VARCHAR(20)` | `NOT NULL`, `DEFAULT 'entrega'`, `CHECK IN ('referencia','entrega')` |
+| `creado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+
+#### `pagos`
+
+| Columna | Tipo | Restricciones |
+| ------- | ---- | ------------- |
+| `id` | `BIGINT GENERATED ALWAYS AS IDENTITY` | PK |
+| `comision_id` | `BIGINT` | `NOT NULL`, FK → `comisiones(id)` `ON DELETE CASCADE` |
+| `monto` | `NUMERIC(10,2)` | `NOT NULL`, `CHECK > 0` |
+| `metodo` | `VARCHAR(40)` | Opcional |
+| `estado` | `VARCHAR(20)` | `NOT NULL`, `DEFAULT 'pendiente'`, `CHECK IN ('pendiente','pagado','reembolsado')` |
+| `creado_en` | `TIMESTAMPTZ` | `NOT NULL`, `DEFAULT CURRENT_TIMESTAMP` |
+
+### Relaciones y reglas de borrado
+
+| Relación | Cardinalidad | FK | Al borrar el padre |
+| -------- | ------------ | -- | ------------------ |
+| `usuarios` → `artistas` | 1:1 | `artistas.usuario_id` | Borra el perfil (`CASCADE`) |
+| `usuarios` → `comisiones` | 1:N | `comisiones.cliente_id` | Bloqueado si hay comisiones |
+| `artistas` → `comisiones` | 1:N | `comisiones.artista_id` | Bloqueado si hay comisiones |
+| `tipos_comision` → `comisiones` | 1:N | `comisiones.tipo_id` | Bloqueado si hay comisiones |
+| `estados_comision` → `comisiones` | 1:N | `comisiones.estado_id` | Bloqueado si hay comisiones |
+| `comisiones` → `archivos_comision` | 1:N | `archivos_comision.comision_id` | Borra los archivos (`CASCADE`) |
+| `comisiones` → `pagos` | 1:N | `pagos.comision_id` | Borra los pagos (`CASCADE`) |
+
+### Índices
+
+| Índice | Tabla | Columna | Uso |
+| ------ | ----- | ------- | --- |
+| `idx_comisiones_cliente` | `comisiones` | `cliente_id` | Comisiones de un cliente |
+| `idx_comisiones_artista` | `comisiones` | `artista_id` | Comisiones de un artista |
+| `idx_comisiones_estado` | `comisiones` | `estado_id` | Filtrar por estado |
+| `idx_comisiones_fecha` | `comisiones` | `creado_en DESC` | Ordenar por más recientes |
 
 Los scripts de inicialización solo se ejecutan la primera vez que se crea el
 volumen. Para reinicializar:
