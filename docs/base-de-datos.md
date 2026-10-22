@@ -15,8 +15,8 @@ tipos y restricciones tiene cada columna y cómo se inicializa PostgreSQL.
 - Usuario de aplicación: `comisiones`.
 - Esquema creado por: `database/init/001-schema.sql`.
 - Datos iniciales: `database/init/002-seed.sql` está vacío.
-- El esquema se aplica solo la primera vez que se crea el volumen
-  `postgres_data`.
+- El esquema se aplica solo al inicializar por primera vez el directorio
+  `volumes/postgres/data`, montado como datos de PostgreSQL.
 - Todavía no hay consultas reales desde Node ni desde PHP.
 - Prisma no está instalado; el esquema SQL es la fuente de verdad actual.
 
@@ -204,17 +204,23 @@ recién creada.
 ## 9. Ciclo de vida de la base de datos
 
 1. `docker compose up` crea el contenedor `db`.
-2. Si el volumen `postgres_data` no existe, PostgreSQL lo inicializa.
+2. Si `volumes/postgres/data` no contiene un clúster, PostgreSQL lo inicializa.
 3. Ejecuta en orden alfabético los scripts de `database/init/`.
 4. `001-schema.sql` crea las tablas y los índices.
 5. `002-seed.sql` no inserta nada porque está vacío.
 6. El healthcheck `pg_isready` marca la base de datos como sana.
 7. Node y PHP pueden conectarse usando el host `db`.
 
-Para volver a ejecutar los scripts de inicialización:
+Los scripts solo se ejecutan al inicializar un clúster nuevo. Para volver a
+ejecutarlos, detén Compose, haz una copia de seguridad y elimina únicamente el
+directorio `volumes/postgres/data`; al iniciar de nuevo, PostgreSQL creará el
+clúster y ejecutará los scripts. Esto borra los datos de esa base de datos.
 
-```sh
-docker compose down --volumes
+En PowerShell (Windows):
+
+```powershell
+docker compose down
+Remove-Item -Recurse -Force .\volumes\postgres\data
 docker compose up --build
 ```
 

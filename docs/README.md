@@ -24,7 +24,7 @@ Navegador
    |                                                        |
    +--> http://localhost:8000 --> PHP + Apache + PDO -------+--> PostgreSQL
                                                             |
-                                                     volumen postgres_data
+                                              volumes/postgres/data
 ```
 
 | Servicio | Imagen | Puerto host | Puerto interno | Función |
@@ -386,11 +386,16 @@ usuarios ─────────────────── comisiones �
 | `idx_comisiones_estado` | `comisiones` | `estado_id` | Filtrar por estado |
 | `idx_comisiones_fecha` | `comisiones` | `creado_en DESC` | Ordenar por más recientes |
 
-Los scripts de inicialización solo se ejecutan la primera vez que se crea el
-volumen. Para reinicializar:
+Los scripts de inicialización solo se ejecutan cuando PostgreSQL crea un
+clúster nuevo. Para reinicializar, detén Compose, haz una copia de seguridad y
+elimina únicamente `volumes/postgres/data` antes de volver a iniciarlo. Esto
+borra los datos existentes de la base de datos:
 
-```sh
-docker compose down --volumes
+En PowerShell (Windows):
+
+```powershell
+docker compose down
+Remove-Item -Recurse -Force .\volumes\postgres\data
 docker compose up --build
 ```
 
@@ -404,8 +409,8 @@ restricciones en [`restricciones.md`](restricciones.md) y el SQL en
   la base de datos esté sana.
 - `php`: construye desde `./php`, publica `${PHP_PORT:-8000}` y espera a la base
   de datos.
-- `db`: PostgreSQL 16, volumen `postgres_data`, healthcheck con `pg_isready` y
-  scripts de `database/init/` montados en modo lectura.
+- `db`: PostgreSQL 16, datos persistidos en `volumes/postgres/data`, healthcheck
+  con `pg_isready` y scripts de `database/init/` montados en modo lectura.
 
 Variables de `.env.example`:
 
